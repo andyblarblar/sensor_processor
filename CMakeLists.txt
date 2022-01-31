@@ -21,6 +21,23 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
+
+# build
+add_executable(sensor_processor src/sensor_processor.cpp)
+ament_target_dependencies(
+  sensor_processor
+  rclcpp
+  sensor_msgs
+  std_msgs
+)
+target_include_directories(sensor_processor PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+install(TARGETS sensor_processor
+  DESTINATION lib/${PROJECT_NAME})
+
+# test
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

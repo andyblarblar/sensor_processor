@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <functional>
-#include "sensor_msgs/msg/image.h"
 
 namespace SensorProcessor
 {
@@ -17,7 +16,7 @@ namespace SensorProcessor
             "/camera/unfiltered_image_raw", rclcpp::SensorDataQoS());
     }
 
-    /// Fixes camera link
+    /// Fixes image raw frames
     void SensorProcessor::raw_img_raw_callback(const sensor_msgs::msg::Image::SharedPtr msg)
     {
         msg->header.frame_id = "camera_link";
