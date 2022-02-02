@@ -1,0 +1,24 @@
+[[nodes]]
+node_name = 'sensor_processor'
+#Relitive to this file
+source_file = ['./src/sensor_processor.cpp']
+summary = '''
+Node that repblishes sensor topics with a corrected frame id. Fixes issues where base_footprint and 
+base link are not properly connected, causing sensor topics to contain invalid frame ids.
+'''
+potential_improvements = 'Investigate modularising how sensors are enabled, and include more sensors.'
+
+#Your published topics
+[[nodes.publishes]]
+name = '/camera/unfiltered_image_raw'
+description = 'Just a plain republish of image_raw with its frame_id set to "camera_link".'
+
+#Your subscribed topics
+[[nodes.subscribes]]
+name = '/camera/image_raw'
+description = 'The raw image (not-debayerd) from the camera node/gazebo. Remap this to whatever camera you want to correct.'
+
+#Your launchfile info
+[nodes.launch]
+file_path = 'TBD'
+usage = 'standard launch file, just make sure to remap all topics to what you need for your bot.'
