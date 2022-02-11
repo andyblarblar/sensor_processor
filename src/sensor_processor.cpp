@@ -14,6 +14,13 @@ namespace SensorProcessor
 
         unfiltered_img_raw_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
             "/camera/unfiltered_image_raw", rclcpp::SensorDataQoS());
+            
+        raw_imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
+            "/robot/imu", 10,
+            std::bind(&SensorProcessor::raw_imu_callback, this, std::placeholders::_1));
+            
+        imu_raw_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>(
+            "/imu", rclcpp::SensorDataQoS());            
     }
 
     /// Fixes image raw frames
@@ -22,6 +29,12 @@ namespace SensorProcessor
         msg->header.frame_id = "camera_link";
         unfiltered_img_raw_publisher_->publish(*msg);
     }
+     /// Fixes image raw frames
+    void SensorProcessor::raw_imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
+    {
+        msg->header.frame_id = "imu_link";
+        imu_raw_publisher_->publish(*msg);
+    }   
 }
 
 int main(int argc, char *argv[])
