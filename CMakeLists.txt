@@ -19,8 +19,11 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(pcl_ros REQUIRED)
 find_package(sensor_msgs REQUIRED)
-
+find_package(message_filters REQUIRED)
+find_package(pcl_ros REQUIRED)
 
 # build
 add_executable(sensor_processor src/sensor_processor.cpp)
@@ -30,11 +33,22 @@ ament_target_dependencies(
   sensor_msgs
   std_msgs
 )
+add_executable(pointcloud src/pointcloud.cpp)
+ament_target_dependencies(
+  pointcloud
+  message_filters
+  pcl_conversions
+  pcl_ros    
+  rclcpp
+  sensor_msgs
+  std_msgs
+  pcl_ros
+)
 target_include_directories(sensor_processor PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
-install(TARGETS sensor_processor
+install(TARGETS sensor_processor pointcloud
   DESTINATION lib/${PROJECT_NAME})
 
 # test
