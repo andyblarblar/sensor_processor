@@ -1,5 +1,6 @@
 #include <memory>
 #include <string>
+#include <optional>
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
@@ -20,8 +21,8 @@ public:
   PointCloudMerge(rclcpp::NodeOptions options) : Node("PointCloud_Concatenate", options)
   {
     // Params
-    std::string camera_trans_source = this->declare_parameter("camera_trans_source", "laser_link");
-    std::string camera_trans_dest = this->declare_parameter("camera_trans_dest", "base_footprint");
+    camera_trans_source = this->declare_parameter("camera_trans_source", "laser_link");
+    camera_trans_dest = this->declare_parameter("camera_trans_dest", "base_footprint");
 
     rmw_qos_profile_t rmw_qos_profile = rmw_qos_profile_sensor_data;
     lidar_subscription_.subscribe(this, "/lidar/points", rmw_qos_profile);
@@ -29,7 +30,6 @@ public:
 
     tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     transform_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
-    camera_trans = tf_buffer->lookupTransform(camera_trans_dest, camera_trans_source, tf2::TimePointZero);
 
     sync.reset(new Sync(MySyncPolicy(10), lidar_subscription_, camera_subscription_));
 
@@ -48,19 +48,26 @@ private:
   */
   void pc_callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg1, const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg2)
   {
+    if (!camera_trans.has_value())
+    {
+      camera_trans = tf_buffer->lookupTransform(camera_trans_dest, camera_trans_source, tf2::TimePointZero);
+    }
+
+    auto &camera_trans_ = camera_trans.value();
+
     pcl::PointCloud<pcl::PointXYZ> lidar, camera, merged;
 
     pcl::fromROSMsg(*msg1, lidar);
     pcl::fromROSMsg(*msg2, camera);
 
     // Translate all points from the camera to move it into the dest frame.
-    // This is useful to move the camera into the laser_link frame, which is 
+    // This is useful to move the camera into the laser_link frame, which is
     // what the concatinated point cloud is published to.
     for (auto &point : camera)
     {
-      point.x += camera_trans.transform.translation.x;
-      point.y += camera_trans.transform.translation.y;
-      point.z += camera_trans.transform.translation.z;
+      point.x += camera_trans_.transform.translation.x;
+      point.y += camera_trans_.transform.translation.y;
+      point.z += camera_trans_.transform.translation.z;
     }
 
     merged = lidar + camera;
@@ -85,7 +92,9 @@ private:
   std::shared_ptr<tf2_ros::TransformListener> transform_listener{nullptr};
   std::unique_ptr<tf2_ros::Buffer> tf_buffer;
   /// Transform to apply to the camera points
-  geometry_msgs::msg::TransformStamped camera_trans;
+  std::optional<geometry_msgs::msg::TransformStamped> camera_trans{};
+  std::string camera_trans_source;
+  std::string camera_trans_dest;
 };
 
 int main(int argc, char *argv[])
