@@ -21,8 +21,8 @@ public:
   PointCloudMerge(rclcpp::NodeOptions options) : Node("PointCloud_Concatenate", options)
   {
     // Params
-    camera_trans_source = this->declare_parameter("camera_trans_source", "laser_link");
-    camera_trans_dest = this->declare_parameter("camera_trans_dest", "base_footprint");
+    camera_trans_source = this->declare_parameter("camera_trans_source", "base_footprint");
+    camera_trans_dest = this->declare_parameter("camera_trans_dest", "laser_link");
 
     rmw_qos_profile_t rmw_qos_profile = rmw_qos_profile_sensor_data;
     lidar_subscription_.subscribe(this, "/lidar/points", rmw_qos_profile);
@@ -50,7 +50,7 @@ private:
   {
     if (!camera_trans.has_value())
     {
-      camera_trans = tf_buffer->lookupTransform(camera_trans_source, camera_trans_dest, tf2::TimePointZero);
+      camera_trans = tf_buffer->lookupTransform(camera_trans_dest, camera_trans_source, tf2::TimePointZero);
     }
 
     auto &camera_trans_ = camera_trans.value();
@@ -67,7 +67,7 @@ private:
     {
       point.x += camera_trans_.transform.translation.x;
       point.y += camera_trans_.transform.translation.y;
-      point.z += camera_trans_.transform.translation.z;
+      // Doing the z transform causes pcl-ls to fail, so we don't do it.
     }
 
     merged = lidar + camera;
@@ -102,8 +102,8 @@ int main(int argc, char *argv[])
   rclcpp::init(argc, argv);
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
-  auto sensor_node = std::make_shared<PointCloudMerge>(options);
-  exec.add_node(sensor_node);
+  auto cloud_node = std::make_shared<PointCloudMerge>(options);
+  exec.add_node(cloud_node);
   exec.spin();
   rclcpp::shutdown();
   return 0;
