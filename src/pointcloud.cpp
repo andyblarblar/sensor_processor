@@ -1,6 +1,5 @@
 #include <memory>
 #include <string>
-#include <cstring>
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
@@ -21,8 +20,8 @@ public:
   {
     
     rmw_qos_profile_t rmw_qos_profile = rmw_qos_profile_sensor_data;
-    lidar_subscription_.subscribe(this, "/kohm/filtered_points", rmw_qos_profile);
-    camera_subscription_.subscribe(this, "/kohm/camera_points", rmw_qos_profile);
+    lidar_subscription_.subscribe(this, "/lidar/points", rmw_qos_profile);
+    camera_subscription_.subscribe(this, "/camera/points", rmw_qos_profile);
 
     sync.reset(new Sync(MySyncPolicy(10), lidar_subscription_, camera_subscription_)); 
     
@@ -51,8 +50,9 @@ private:
         
     sensor_msgs::msg::PointCloud2::SharedPtr output(new sensor_msgs::msg::PointCloud2);
     pcl::toROSMsg(merged, *output);
-    combined_pc_publisher_->publish(*output);
 
+    output->header.stamp = this->get_clock()->now();
+    combined_pc_publisher_->publish(*output);
   }
     
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> lidar_subscription_;
@@ -62,6 +62,7 @@ private:
   typedef Synchronizer<MySyncPolicy> Sync;
   std::shared_ptr<Sync> sync;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr combined_pc_publisher_; 
+  bool merge_point_clouds;
 };
 
 int main(int argc, char *argv[])
