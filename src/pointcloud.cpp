@@ -23,14 +23,16 @@ public:
     // Params
     camera_trans_source = this->declare_parameter("camera_trans_source", "base_footprint");
     camera_trans_dest = this->declare_parameter("camera_trans_dest", "laser_link");
-
+    tf_timeout = this->declare_parameter("tf_timeout", 0.03);
+    
+    // Tf2
+    tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    transform_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);  
+       
+    // message filter synchronizer and publisher
     rmw_qos_profile_t rmw_qos_profile = rmw_qos_profile_sensor_data;
     lidar_subscription_.subscribe(this, "/lidar/points", rmw_qos_profile);
     camera_subscription_.subscribe(this, "/camera/points", rmw_qos_profile);
-
-    tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-    transform_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
-
     sync.reset(new Sync(MySyncPolicy(10), lidar_subscription_, camera_subscription_));
 
     // synchronizer's callback function
@@ -50,7 +52,8 @@ private:
   {
     if (!camera_trans.has_value())
     {
-      camera_trans = tf_buffer->lookupTransform(camera_trans_dest, camera_trans_source, tf2::TimePointZero);
+      camera_trans = tf_buffer->lookupTransform(camera_trans_dest, camera_trans_source, this->get_clock()->now(),
+      	rclcpp::Duration::from_seconds(tf_timeout));
     }
 
     auto &camera_trans_ = camera_trans.value();
@@ -78,19 +81,19 @@ private:
     output->header.stamp = this->get_clock()->now();
     combined_pc_publisher_->publish(*output);
   }
-
+  
+  // message filter stuff
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> lidar_subscription_;
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> camera_subscription_;
-
   typedef sync_policies::ApproximateTime<sensor_msgs::msg::PointCloud2, sensor_msgs::msg::PointCloud2> MySyncPolicy;
   typedef Synchronizer<MySyncPolicy> Sync;
   std::shared_ptr<Sync> sync;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr combined_pc_publisher_;
-  bool merge_point_clouds;
 
   // Tf stuff
   std::shared_ptr<tf2_ros::TransformListener> transform_listener{nullptr};
   std::unique_ptr<tf2_ros::Buffer> tf_buffer;
+  float tf_timeout;
   /// Transform to apply to the camera points
   std::optional<geometry_msgs::msg::TransformStamped> camera_trans{};
   std::string camera_trans_source;
