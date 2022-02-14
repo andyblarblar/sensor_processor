@@ -1,4 +1,3 @@
-
 #include "pointcloud_merge/pointcloud.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
