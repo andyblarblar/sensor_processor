@@ -52,7 +52,7 @@ private:
   {
     if (!camera_trans.has_value())
     {
-      camera_trans = tf_buffer->lookupTransform(camera_trans_dest, camera_trans_source, this->get_clock()->now(),
+      camera_trans = tf_buffer->lookupTransform(camera_trans_dest, camera_trans_source, this->now(),
       	rclcpp::Duration::from_seconds(tf_timeout));
     }
 
