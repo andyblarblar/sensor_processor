@@ -3,22 +3,54 @@ node_name = 'sensor_processor'
 #Relitive to this file
 source_file = ['./src/sensor_processor.cpp']
 summary = '''
-Node that repblishes sensor topics with a corrected frame id. Fixes issues where base_footprint and 
-base link are not properly connected, causing sensor topics to contain invalid frame ids.
+Node that republishes sensor topics with a corrected frame id. Fixes caused by using ign gazebo with rviz2.
+The topics published by this node are to be used only when visualising, they will fail if used with a node.
 '''
-potential_improvements = 'Investigate modularising how sensors are enabled, and include more sensors.'
+potential_improvements = 'Include more sensors, modularise frame_ids.'
 
-#Your published topics
 [[nodes.publishes]]
 name = '/camera/unfiltered_image_raw'
 description = 'Just a plain republish of image_raw with its frame_id set to "camera_link".'
 
-#Your subscribed topics
 [[nodes.subscribes]]
 name = '/camera/image_raw'
 description = 'The raw image (not-debayerd) from the camera node/gazebo. Remap this to whatever camera you want to correct.'
 
-#Your launchfile info
-[nodes.launch]
-file_path = 'TBD'
-usage = 'standard launch file, just make sure to remap all topics to what you need for your bot.'
+[[nodes.publishes]]
+name = '/robot/imu'
+description = 'Just a plain republish of imu with its frame_id set to "imu_link".'
+
+[[nodes.subscribes]]
+name = '/imu'
+description = 'Standard IMU data. Remap this to whatever imu you want to correct.'
+
+
+[[nodes]]
+node_name = 'pointcloud_concatenate'
+#Relitive to this file
+source_file = ['./src/pointcloud.cpp']
+summary = '''
+Node that combines two pointcloud topics. This is designed for use with [white line detection](https://github.com/iscumd/white_line_detection)
+to combine the camera and LiDAR pointclouds.
+'''
+potential_improvements = 'Make more generic, very attached to the camera rn.'
+
+[[nodes.publishes]]
+name = '/combined/points'
+description = 'The combined pointclouds.'
+
+[[nodes.subscribes]]
+name = '/lidar/points'
+description = 'The first pointcloud topic. Traditionally LiDAR points.'
+
+[[nodes.subscribes]]
+name = '/camera/points'
+description = 'The second point source that gets translated. Traditionally camera points.'
+
+[[nodes.params]]
+name = 'camera_trans_source'
+description = 'The source frame of the tf transform to apply to /camera/points. Default base_footprint.'
+
+[[nodes.params]]
+name = 'camera_trans_dest'
+description = 'The destination frame of the tf transform to apply to /camera/points. Default laser_link.'
