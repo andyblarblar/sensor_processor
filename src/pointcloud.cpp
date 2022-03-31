@@ -56,7 +56,12 @@ void PointCloudMerge::pc_callback(const sensor_msgs::msg::PointCloud2::ConstShar
   {
     point.x += camera_trans_.transform.translation.x;
     point.y += camera_trans_.transform.translation.y;
-    // Doing the z transform causes pcl-ls to fail, so we don't do it.
+    point.z += camera_trans_.transform.translation.z;
+  }
+
+  for (auto &point : lidar) //TODO this is hardcoded to fix ohm, we need to add this to the node correctly somehow
+  {
+    point.z += .5;
   }
 
   merged = lidar + camera;
