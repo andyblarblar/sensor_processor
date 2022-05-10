@@ -1,9 +1,8 @@
-#include "pointcloud_merge/pointcloud.hpp"
-
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_types.h>
 #include <pcl/conversions.h>
 
+#include "pointcloud_merge/pointcloud.hpp"
 PointCloudMerge::PointCloudMerge(rclcpp::NodeOptions options)
 : Node("PointCloud_Concatenate", options)
 {
@@ -20,7 +19,7 @@ PointCloudMerge::PointCloudMerge(rclcpp::NodeOptions options)
   rmw_qos_profile_t rmw_qos_profile = rmw_qos_profile_sensor_data;
   lidar_subscription_.subscribe(this, "/lidar/points", rmw_qos_profile);
   camera_subscription_.subscribe(this, "/camera/points", rmw_qos_profile);
-  sync.reset(new Sync(MySyncPolicy(1000), lidar_subscription_, camera_subscription_));
+  sync.reset(new Sync(MySyncPolicy(100), lidar_subscription_, camera_subscription_));
 
   // synchronizer's callback function
   sync->registerCallback(std::bind(&PointCloudMerge::pc_callback, this, std::placeholders::_1, std::placeholders::_2));
