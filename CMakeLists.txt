@@ -24,6 +24,7 @@ find_package(pcl_ros REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(pcl_ros REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 # build
 add_executable(sensor_processor src/sensor_processor.cpp)
@@ -32,6 +33,7 @@ ament_target_dependencies(
   rclcpp
   sensor_msgs
   std_msgs
+  nav_msgs
 )
 add_executable(pointcloud src/pointcloud.cpp)
 ament_target_dependencies(

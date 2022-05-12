@@ -20,7 +20,14 @@ namespace SensorProcessor
             std::bind(&SensorProcessor::raw_imu_callback, this, std::placeholders::_1));
             
         imu_raw_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>(
-            "/imu", rclcpp::SensorDataQoS());            
+            "/imu", rclcpp::SensorDataQoS());
+
+        raw_odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
+            "/robot/odom_raw", 10,
+            std::bind(&SensorProcessor::raw_odom_callback, this, std::placeholders::_1));
+
+        odom_raw_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>(
+            "/kohm/odom", rclcpp::SensorDataQoS());        
     }
 
     /// Fixes image raw frames
@@ -34,7 +41,13 @@ namespace SensorProcessor
     {
         msg->header.frame_id = "imu_link";
         imu_raw_publisher_->publish(*msg);
-    }   
+    }
+
+    void SensorProcessor::raw_odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
+    {
+        msg->pose.pose.position.z = 0.0;
+        odom_raw_publisher_->publish(*msg);
+    }
 }
 
 int main(int argc, char *argv[])
