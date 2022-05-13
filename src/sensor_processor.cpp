@@ -46,6 +46,7 @@ namespace SensorProcessor
     void SensorProcessor::raw_odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
         msg->pose.pose.position.z = 0.0;
+        msg->twist.twist.linear.z = 0.0;
         odom_raw_publisher_->publish(*msg);
     }
 }
