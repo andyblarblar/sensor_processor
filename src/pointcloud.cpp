@@ -66,11 +66,11 @@ void PointCloudMerge::pc_callback(const sensor_msgs::msg::PointCloud2::ConstShar
 
   merged = lidar + camera;
 
-  sensor_msgs::msg::PointCloud2::SharedPtr output(new sensor_msgs::msg::PointCloud2);
-  pcl::toROSMsg(merged, *output);
+  sensor_msgs::msg::PointCloud2 output{};
+  pcl::toROSMsg(merged, output);
 
-  output->header.stamp = this->get_clock()->now();
-  combined_pc_publisher_->publish(*output);
+  output.header.stamp = this->get_clock()->now();
+  combined_pc_publisher_->publish(output);
 }
 
 int main(int argc, char *argv[])
