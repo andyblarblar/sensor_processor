@@ -23,7 +23,6 @@ find_package(pcl_conversions REQUIRED)
 find_package(pcl_ros REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(message_filters REQUIRED)
-find_package(pcl_ros REQUIRED)
 
 # build
 add_executable(sensor_processor src/sensor_processor.cpp)
